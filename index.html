@@ -238,6 +238,8 @@ fbq('track', 'PageView');
 
 <script>
 (function(){
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3IuQBG80h6NryVxaDoLoaAWx935cwJvf__pxdtjEkME1d3ZFd99SdcTuu8hvTUZEY/exec';
+
   const logoSrc = document.querySelector('.brand img')?.src;
   if(logoSrc){
     document.querySelectorAll('img[data-logo]').forEach(img => img.src = logoSrc);
@@ -245,26 +247,30 @@ fbq('track', 'PageView');
     if(fav) fav.href = logoSrc;
   }
 
-  const cdEl = document.getElementById('cd');
-  if(cdEl){
-    const target = new Date('2026-11-15T23:59:59').getTime();
-    const pad = n => String(Math.max(0, n)).padStart(2, '0');
-    const tick = () => {
-      const diff = target - Date.now();
-      if(diff <= 0){
-        cdEl.innerHTML = '<b>00</b><small>ي</small><b>00</b><small>س</small><b>00</b><small>د</small><b>00</b><small>ث</small>';
-        return;
-      }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      cdEl.innerHTML = `<b>${pad(d)}</b><small>ي</small><b>${pad(h)}</b><small>س</small><b>${pad(m)}</b><small>د</small><b>${pad(s)}</b><small>ث</small>`;
-    };
-    tick();
-    setInterval(tick, 1000);
+  // العد التنازلي (توقيت المغرب)
+  const END = new Date('2026-11-15T23:59:59+01:00');
+  const cd = document.getElementById('cd');
+  const pad = n => String(Math.max(0, n)).padStart(2, '0');
+  let timer;
+  function tick(){
+    if(!cd) return;
+    const diff = END - new Date();
+    if(diff <= 0){
+      if(timer) clearInterval(timer);
+      cd.innerHTML = '<b>00</b><small>ي</small><b>00</b><small>س</small><b>00</b><small>د</small><b>00</b><small>ث</small>';
+      return;
+    }
+    const t = Math.floor(diff / 1000);
+    const d = Math.floor(t / 86400);
+    const h = Math.floor((t % 86400) / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = t % 60;
+    cd.innerHTML = `<b>${pad(d)}</b><small>ي</small><b>${pad(h)}</b><small>س</small><b>${pad(m)}</b><small>د</small><b>${pad(s)}</b><small>ث</small>`;
   }
+  tick();
+  timer = setInterval(tick, 1000);
 
+  // إرسال الفورم إلى Google Apps Script + تتبع Lead في Meta Pixel
   const form = document.getElementById('registrationForm');
   const nameInput = document.getElementById('name');
   const phoneInput = document.getElementById('phone');
@@ -278,20 +284,41 @@ fbq('track', 'PageView');
     phoneError.style.display = 'none';
     sendError.style.display = 'none';
 
+    const fullName = nameInput.value.trim();
     const cleanPhone = phoneInput.value.replace(/\s+/g, '');
+
     if(!/^(05|06|07)\d{8}$/.test(cleanPhone)){
       phoneError.style.display = 'block';
       phoneInput.focus();
       return;
     }
 
-    if(typeof fbq === 'function'){
-      fbq('track', 'Lead');
-    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if(submitBtn) submitBtn.disabled = true;
 
-    if(tn) tn.textContent = nameInput.value.trim();
-    form.hidden = true;
-    thanks.hidden = false;
+    const payload = new URLSearchParams({
+      name: fullName,
+      phone: cleanPhone
+    });
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: payload.toString()
+    })
+    .then(function(){
+      if(typeof fbq === 'function'){
+        fbq('track', 'Lead');
+      }
+      if(tn) tn.textContent = fullName;
+      form.hidden = true;
+      thanks.hidden = false;
+    })
+    .catch(function(){
+      sendError.style.display = 'block';
+      if(submitBtn) submitBtn.disabled = false;
+    });
   });
 })();
 </script>
