@@ -9,6 +9,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" id="fav" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Lalezar&display=swap" rel="stylesheet">
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2339581863497224');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2339581863497224&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
 <style>
 :root{--ink:#1A1040;--blue:#2F5BFF;--coral:#F2481F;--sun:#FFD23F;--mint:#19C37D;--lilac:#EEEBFF;--sh:4px 5px 0 var(--ink)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -277,6 +296,15 @@ footer a{color:var(--sun);font-weight:700;margin:0 10px}
             sendError.style.display = 'block';
             btn.disabled = false; btn.textContent = 'أكّد مقعدي دابا 🔥';
             return;
+        }
+
+        // تتبع حدث التسجيل (Lead) في Meta Pixel
+        if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+                content_name: 'Meta Ads Course',
+                value: 250,
+                currency: 'MAD'
+            });
         }
 
         // رسالة الشكر (بلا تحويل للواتساب)
